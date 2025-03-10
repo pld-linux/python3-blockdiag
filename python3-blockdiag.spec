@@ -7,7 +7,7 @@ Summary:	Blockdiag generate block-diagram image file from spec-text file
 Summary(pl.UTF-8):	Generowanie obrazków diagramów blokowych z opisu tekstowego
 Name:		python3-%{module}
 Version:	2.0.1
-Release:	4
+Release:	5
 License:	Apache v2.0
 Group:		Libraries/Python
 #Source0Download: https://pypi.org/simple/blockdiag/
