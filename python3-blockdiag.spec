@@ -17,12 +17,12 @@ URL:		http://blockdiag.com/en/blockdiag/index.html
 BuildRequires:	python3-modules >= 1:3.5
 BuildRequires:	python3-setuptools
 %if %{with tests}
-BuildRequires:	python3-ReportLab
 BuildRequires:	python3-docutils
 BuildRequires:	python3-funcparserlib
 BuildRequires:	python3-nose
 BuildRequires:	python3-nose_exclude
 BuildRequires:	python3-pillow >= 3.0
+BuildRequires:	python3-reportlab
 BuildRequires:	python3-webcolors
 %endif
 BuildRequires:	rpmbuild(macros) >= 1.714
