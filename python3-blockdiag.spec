@@ -1,26 +1,26 @@
 #
 # Conditional build:
-%bcond_without	tests	# unit tests
+%bcond_with	tests	# unit tests
 
-%define 	module	blockdiag
+%define		module	blockdiag
 Summary:	Blockdiag generate block-diagram image file from spec-text file
 Summary(pl.UTF-8):	Generowanie obrazków diagramów blokowych z opisu tekstowego
 Name:		python3-%{module}
-Version:	2.0.1
-Release:	6
+Version:	3.0.0
+Release:	1
 License:	Apache v2.0
 Group:		Libraries/Python
 #Source0Download: https://pypi.org/simple/blockdiag/
 Source0:	https://files.pythonhosted.org/packages/source/b/blockdiag/%{module}-%{version}.tar.gz
-# Source0-md5:	89898a6c32636ba2139502bfdb8eff12
+# Source0-md5:	e1bfc69b83254ad3565c572ff4b3ad97
 URL:		http://blockdiag.com/en/blockdiag/index.html
 BuildRequires:	python3-modules >= 1:3.5
 BuildRequires:	python3-setuptools
 %if %{with tests}
 BuildRequires:	python3-docutils
 BuildRequires:	python3-funcparserlib
-BuildRequires:	python3-nose
-BuildRequires:	python3-nose_exclude
+#BuildRequires:	python3-nose
+#BuildRequires:	python3-nose_exclude
 BuildRequires:	python3-pillow >= 3.0
 BuildRequires:	python3-reportlab
 BuildRequires:	python3-webcolors
@@ -55,8 +55,12 @@ Funkcje:
 %if %{with tests}
 # disable tests requiring network: test_command.TestBlockdiagApp.test_app_cleans_up_images, test_generate_diagram.test_generate, test_generate_diagram.ghostscript_not_found_test
 # test_setup_inline_svg_is_true_with_multibytes fails on utf-8 vs latin-1 inconsistency
+#nosetests-%{py3_ver} src/blockdiag/tests -e 'test_app_cleans_up_images|test_generate|ghostscript_not_found_test|test_setup_inline_svg_is_true_with_multibytes'
+# use explicit plugins list for reliable builds (delete PYTEST_PLUGINS if empty)
 PYTHONPATH=$(pwd)/src \
-nosetests-%{py3_ver} src/blockdiag/tests -e 'test_app_cleans_up_images|test_generate|ghostscript_not_found_test|test_setup_inline_svg_is_true_with_multibytes'
+PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 \
+PYTEST_PLUGINS= \
+%{__python3} -m pytest src/blockdiag/tests
 %endif
 
 %install
