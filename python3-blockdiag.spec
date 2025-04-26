@@ -85,8 +85,6 @@ rm -rf $RPM_BUILD_ROOT
 %attr(755,root,root) %{_bindir}/blockdiag
 %attr(755,root,root) %{_bindir}/blockdiag-3
 %{py3_sitescriptdir}/blockdiag
-%{py3_sitescriptdir}/blockdiag_sphinxhelper.py
-%{py3_sitescriptdir}/__pycache__/blockdiag_sphinxhelper.cpython-*.py[co]
 %{py3_sitescriptdir}/%{module}-%{version}-py*.egg-info
 %{_mandir}/man1/blockdiag.1*
 %{_mandir}/man1/blockdiag-3.1*
