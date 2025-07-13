@@ -1,33 +1,39 @@
 #
 # Conditional build:
-%bcond_with	tests	# unit tests
+%bcond_without	tests	# unit tests
 
 %define		module	blockdiag
 Summary:	Blockdiag generate block-diagram image file from spec-text file
 Summary(pl.UTF-8):	Generowanie obrazków diagramów blokowych z opisu tekstowego
 Name:		python3-%{module}
 Version:	3.0.0
-Release:	1
+Release:	2
 License:	Apache v2.0
 Group:		Libraries/Python
 #Source0Download: https://pypi.org/simple/blockdiag/
 Source0:	https://files.pythonhosted.org/packages/source/b/blockdiag/%{module}-%{version}.tar.gz
 # Source0-md5:	e1bfc69b83254ad3565c572ff4b3ad97
-URL:		http://blockdiag.com/en/blockdiag/index.html
-BuildRequires:	python3-modules >= 1:3.5
+# https://github.com/blockdiag/blockdiag/pull/175.patch
+Patch0:		blockdiag-pytest.patch
+# https://github.com/blockdiag/blockdiag/pull/179.patch
+Patch1:		blockdiag-pillow10.patch
+Patch2:		blockdiag-pillow10-setup.patch
+URL:		http://blockdiag.com/
+BuildRequires:	python3-build
+BuildRequires:	python3-installer
+BuildRequires:	python3-modules >= 1:3.7
 BuildRequires:	python3-setuptools
 %if %{with tests}
 BuildRequires:	python3-docutils
-BuildRequires:	python3-funcparserlib
-#BuildRequires:	python3-nose
-#BuildRequires:	python3-nose_exclude
-BuildRequires:	python3-pillow >= 3.0
+BuildRequires:	python3-funcparserlib >= 1.0.0
+BuildRequires:	python3-pillow >= 3.1.0
+BuildRequires:	python3-pytest
 BuildRequires:	python3-reportlab
 BuildRequires:	python3-webcolors
 %endif
 BuildRequires:	rpmbuild(macros) >= 1.714
 BuildRequires:	sed >= 4.0
-Requires:	python3-modules >= 1:3.5
+Requires:	python3-modules >= 1:3.7
 BuildArch:	noarch
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
@@ -48,25 +54,31 @@ Funkcje:
 
 %prep
 %setup -q -n %{module}-%{version}
+%patch -P0 -p1
+%patch -P1 -p1
+%patch -P2 -p1
+
+# contains Pillow<10 dependency
+%{__rm} -r src/blockdiag.egg-info
 
 %build
-%py3_build
+# although project uses just setup.py, use PEP-517 build in order to get metadata for tests
+%py3_build_pyproject
 
 %if %{with tests}
-# disable tests requiring network: test_command.TestBlockdiagApp.test_app_cleans_up_images, test_generate_diagram.test_generate, test_generate_diagram.ghostscript_not_found_test
-# test_setup_inline_svg_is_true_with_multibytes fails on utf-8 vs latin-1 inconsistency
-#nosetests-%{py3_ver} src/blockdiag/tests -e 'test_app_cleans_up_images|test_generate|ghostscript_not_found_test|test_setup_inline_svg_is_true_with_multibytes'
-# use explicit plugins list for reliable builds (delete PYTEST_PLUGINS if empty)
-PYTHONPATH=$(pwd)/src \
+%{__python3} -m zipfile -e build-3/*.whl build-3-test
+# disable tests requiring network:
+#  test_command.py::TestBlockdiagApp::test_app_cleans_up_images
+#  test_generate_diagram.py::test_generate_with_separate[.../diagrams/node_icon.diag-svg-options260]
+PYTHONPATH=$(pwd)/build-3-test \
 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 \
-PYTEST_PLUGINS= \
-%{__python3} -m pytest src/blockdiag/tests
+%{__python3} -m pytest src/blockdiag/tests -k 'not test_app_cleans_up_images and not test_generate_with_separate'
 %endif
 
 %install
 rm -rf $RPM_BUILD_ROOT
 
-%py3_install
+%py3_install_pyproject
 
 %{__rm} -r $RPM_BUILD_ROOT%{py3_sitescriptdir}/blockdiag/tests
 
@@ -85,6 +97,6 @@ rm -rf $RPM_BUILD_ROOT
 %attr(755,root,root) %{_bindir}/blockdiag
 %attr(755,root,root) %{_bindir}/blockdiag-3
 %{py3_sitescriptdir}/blockdiag
-%{py3_sitescriptdir}/%{module}-%{version}-py*.egg-info
+%{py3_sitescriptdir}/blockdiag-%{version}.dist-info
 %{_mandir}/man1/blockdiag.1*
 %{_mandir}/man1/blockdiag-3.1*
